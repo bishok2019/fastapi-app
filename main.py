@@ -9,14 +9,16 @@
 
 from fastapi import APIRouter, FastAPI
 
-from apps.authentication.route import router as auth_router
+from apps.authentication.auth_routes import router as auth_router
+from apps.authentication.user_routes import router as user_router
 from apps.blog.route import router as blog_router
 
 app = FastAPI()
 
 v1_router = APIRouter(prefix="/api/v1")
-v1_router.include_router(auth_router, prefix="/auth")
-v1_router.include_router(blog_router, prefix="/blog")
+v1_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+v1_router.include_router(user_router, prefix="/users", tags=["Users"])
+v1_router.include_router(blog_router, prefix="/blog", tags=["Blog"])
 
 # v2_router = APIRouter(prefix="/api/v2")
 # v2_router.include_router(auth_router, prefix="/auth", tags=["v2-auth"])

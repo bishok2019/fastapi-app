@@ -103,6 +103,5 @@ user_routers = [
     # ),
 ]
 
-# router.include_router(user_routers.router)
-for user_router in user_routers:
-    router.include_router(user_router.router, prefix="/users")
+# for user_router in user_routers:
+#     router.include_router(user_router.router, prefix="/users")

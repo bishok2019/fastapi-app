@@ -9,7 +9,7 @@ from apps.authentication.authentication import (
     verify_token,
 )
 from apps.authentication.models.models import User
-from apps.authentication.schemas import Token, UserCreate, UserLogin, UserRetrieve
+from apps.authentication.schemas import UserCreate, UserLogin, UserRetrieve
 from apps.authentication.utils import hash_password, verify_password
 from apps.database import get_db
 from base.route import StandardResponse

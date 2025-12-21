@@ -1,9 +1,8 @@
+from decouple import config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "postgresql+psycopg2://admin:admin123@localhost:5437/fast_api_db"
-
-engine = create_engine(DATABASE_URL, future=True)
+engine = create_engine(config("DATABASE_URL_"), future=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
