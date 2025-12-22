@@ -39,7 +39,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         hashed_password=hash_password(user.password),
         is_active=True,
         is_superuser=False,
-        is_verified=False,
+        # is_verified=False,
     )
     db.add(db_user)
     db.commit()
@@ -115,7 +115,7 @@ def get_me(current_user: User = Depends(get_current_active_user)):
             "username": current_user.username,
             "email": current_user.email,
             "is_active": current_user.is_active,
-            "is_verified": current_user.is_verified,
+            # "is_verified": current_user.is_verified,
         },
         message="User retrieved successfully",
     )
