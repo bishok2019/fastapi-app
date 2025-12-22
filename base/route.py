@@ -26,6 +26,36 @@ class StandardResponse(BaseModel):
         }
     )
 
+    @classmethod
+    def success_response(
+        cls,
+        data: Any = None,
+        message: str = "Operation successful",
+        meta: Optional[Dict[str, Any]] = None,
+    ) -> "StandardResponse":
+        return cls(
+            success=True,
+            data=data,
+            message=message,
+            meta=meta,
+        )
+
+    @classmethod
+    def error_response(
+        cls,
+        message: str = "Error occurred",
+        error: Optional[str] = None,
+        errors: Optional[List[Dict[str, str]]] = None,
+        meta: Optional[Dict[str, Any]] = None,
+    ) -> "StandardResponse":
+        return cls(
+            success=False,
+            message=message,
+            error=error,
+            errors=errors,
+            meta=meta,
+        )
+
 
 class CreateRouter(Generic[ModelType, CreateSchemaType]):
     def __init__(
