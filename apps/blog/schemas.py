@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class PostCreate(BaseModel):
@@ -11,6 +11,7 @@ class PostList(BaseModel):
     title: str
     content: str
     author_id: int
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PostRetrieve(BaseModel):

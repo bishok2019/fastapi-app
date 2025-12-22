@@ -71,21 +71,21 @@ post_routers = [
         Post,
         PostList,
         prefix="/list",
-        tags=["posts"],
+        # tags=["posts"],
     ),
     PostRetrieveRouter(
         Post,
         PostRetrieve,
         prefix="/retrieve/{id}",
-        tags=["posts"],
+        # tags=["posts"],
     ),
     PostCreateRouter(
         Post,
         PostCreate,
         prefix="/create",
-        tags=["posts"],
+        # tags=["posts"],
     ),
 ]
 
 for post_router in post_routers:
-    router.include_router(post_router.router, prefix="/posts", tags=["posts"])
+    router.include_router(post_router.router, prefix="/posts")
