@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from apps.database import get_db
@@ -19,7 +19,8 @@ class StandardResponse(BaseModel):
     success: bool
     data: Optional[Any] = None
     message: Optional[str] = None
-    # meta: Any | None = None
+    error: Optional[str] = None
+    errors: Optional[List[Dict[str, str]]] = None
     meta: Optional[Dict[str, Any]] = Field(
         default_factory=lambda: {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -37,7 +38,8 @@ class StandardResponse(BaseModel):
             success=True,
             data=data,
             message=message,
-            meta=meta,
+            # meta=meta,
+            **({} if meta is None else {"meta": meta}),
         )
 
     @classmethod
@@ -53,7 +55,8 @@ class StandardResponse(BaseModel):
             message=message,
             error=error,
             errors=errors,
-            meta=meta,
+            # meta=meta,
+            **({} if meta is None else {"meta": meta}),
         )
 
 

@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+from apps.authentication.models.models import User
 from apps.database import get_db
 from base.route import (
     CreateRouter,
@@ -26,21 +28,43 @@ router = APIRouter()
 # router.include_router(update_router.router, prefix="/posts", tags=["posts"])
 
 
+# class PostCreateRouter(CreateRouter[Post, PostCreate]):
+#     def create(self, item: PostCreate, db: Session = Depends(get_db)):
+#         # check if author exists
+#         author = db.query(User).filter(self.model.author_id == item.author_id).first()
+#         if not author:
+#             return StandardResponse.error_response(
+#                 message="Author not found.",
+#                 status_code=status.HTTP_400_BAD_REQUEST,
+#             )
+#         db_item = self.model(**item.model_dump())
+#         db.add(db_item)
+#         db.commit()
+#         db.refresh(db_item)
+#         return StandardResponse(
+#             success=True,
+#             data=self.schema.model_validate(db_item),
+#             message="Post created successfully.",
+#         )
+
+
 class PostCreateRouter(CreateRouter[Post, PostCreate]):
     def create(self, item: PostCreate, db: Session = Depends(get_db)):
-        # check if author exists
-        author = (
-            db.query(self.model).filter(self.model.author_id == item.author_id).first()
-        )
+        author = db.query(User).filter(User.id == item.author_id).first()
         if not author:
-            raise HTTPException(status_code=400, detail="Author does not exist.")
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=StandardResponse.error_response(
+                    message="Author not found."
+                ).model_dump(),
+            )
         db_item = self.model(**item.model_dump())
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
         return StandardResponse(
             success=True,
-            data=self.schema.model_validate(db_item),
+            data=PostRetrieve.model_validate(db_item),
             message="Post created successfully.",
         )
 

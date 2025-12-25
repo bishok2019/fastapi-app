@@ -75,6 +75,7 @@
 #     return {"message": "Login successful.", "username": db_user.username}
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from apps.database import get_db
@@ -97,9 +98,19 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         .first()
     )
     if existing_user:
-        raise HTTPException(
+        # raise HTTPException(
+        #     status_code=status.HTTP_400_BAD_REQUEST,
+        #     detail="Username or email already registered.",
+        # )
+        # return StandardResponse.error_response(
+        #     message="Username or email already registered.",
+        #     status_code=status.HTTP_400_BAD_REQUEST,
+        # )
+        return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username or email already registered.",
+            content=StandardResponse.error_response(
+                message="Username or email already registered."
+            ).model_dump(),
         )
 
     # Create new user
@@ -115,10 +126,12 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
 
-    return StandardResponse(
-        success=True,
-        data=UserRetrieve.model_validate(db_user),
-        message="User created successfully.",
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content=StandardResponse.success_response(
+            data=UserRetrieve.model_validate(db_user),
+            message="User created successfully.",
+        ).model_dump(),
     )
 
 
@@ -128,10 +141,12 @@ def get_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     users = db.query(User).offset(skip).limit(limit).all()
     data = [UserList.model_validate(user) for user in users]
 
-    return StandardResponse(
-        success=True,
-        data=data,
-        message="Users fetched successfully.",
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=StandardResponse.success_response(
+            data=data,
+            message="Users fetched successfully.",
+        ).model_dump(),
     )
 
 
@@ -140,15 +155,19 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     """Get a specific user by ID"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found.",
+            content=StandardResponse.error_response(
+                message="User not found.",
+            ).model_dump(),
         )
 
-    return StandardResponse(
-        success=True,
-        data=UserRetrieve.model_validate(user),
-        message="User retrieved successfully.",
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=StandardResponse.success_response(
+            data=UserRetrieve.model_validate(user),
+            message="User retrieved successfully.",
+        ).model_dump(),
     )
 
 
