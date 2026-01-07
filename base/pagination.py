@@ -1,7 +1,5 @@
-# apps/common/pagination.py
-
 from math import ceil
-from typing import Generic, List, Optional, Type, TypeVar
+from typing import Dict, Generic, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -21,14 +19,14 @@ class PaginationMeta(BaseModel):
 
 class CustomPagination(BaseModel, Generic[SchemaType]):
     data: List[SchemaType]
-    meta: PaginationMeta
+    meta: Dict
 
 
 def paginate(
     *,
     query,
-    page: int,
-    page_size: int,
+    page: int = 1,  # assign default page value so we dont have to pass it every time
+    page_size: int = 10,
     schema: Type[SchemaType],
 ) -> CustomPagination[SchemaType]:
     if page < 1:
@@ -44,16 +42,14 @@ def paginate(
 
     items = query.offset((page - 1) * page_size).limit(page_size).all()
 
-    data = [schema.model_validate(item) for item in items]
+    serialized_data = [schema.model_validate(item).model_dump() for item in items]
 
-    return CustomPagination(
-        data=data,
-        meta=PaginationMeta(
-            total=total,
-            page=page,
-            page_size=page_size,
-            total_pages=total_pages,
-            previous_page=page - 1 if page > 1 else None,
-            next_page=page + 1 if page < total_pages else None,
-        ),
+    meta = PaginationMeta(
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+        previous_page=page - 1 if page > 1 else None,
+        next_page=page + 1 if page < total_pages else None,
     )
+    return CustomPagination(data=serialized_data, meta=meta.model_dump())

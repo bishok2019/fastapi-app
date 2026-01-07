@@ -89,7 +89,9 @@ from .utils import hash_password, verify_password
 router = APIRouter()
 
 
-@router.post("/", response_model=StandardResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/create", response_model=StandardResponse, status_code=status.HTTP_201_CREATED
+)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """Create a new user"""
     # Check if user exists already
@@ -136,28 +138,27 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/", response_model=StandardResponse)
-def get_users(page: int = 1, page_size: int = 1, db: Session = Depends(get_db)):
+@router.get("/list", response_model=StandardResponse)
+def get_users(
+    page: int = 1,  # we are passing page and page_size in paginate() directly
+    page_size: int = 1,
+    db: Session = Depends(get_db),
+):
     """Get all users with pagination"""
     # users = db.query(User).all()
     # data = [UserList.model_validate(user) for user in users]
     result = paginate(
         query=db.query(User),
-        page=page,
+        page=page,  # we are passing page and page_size in paginate() directly
         page_size=page_size,
         schema=UserList,
-    )
-    meta_dict = (
-        result.meta.model_dump()
-        if hasattr(result.meta, "model_dump")
-        else dict(result.meta)
     )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=StandardResponse.success_response(
             data=result.data,
             message="Users fetched successfully.",
-            meta=meta_dict,
+            meta=result.meta,
         ).model_dump(),
     )
     # return JSONResponse(
@@ -169,7 +170,7 @@ def get_users(page: int = 1, page_size: int = 1, db: Session = Depends(get_db)):
     # )
 
 
-@router.get("/{user_id}", response_model=StandardResponse)
+@router.get("/retrieve/{user_id}", response_model=StandardResponse)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     """Get a specific user by ID"""
     user = db.query(User).filter(User.id == user_id).first()
@@ -188,75 +189,3 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
             message="User retrieved successfully.",
         ).model_dump(),
     )
-
-
-# @router.put("/{user_id}", response_model=StandardResponse)
-# def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
-#     """Update a user"""
-#     db_user = db.query(User).filter(User.id == user_id).first()
-#     if not db_user:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="User not found.",
-#         )
-
-#     # Update only provided fields
-#     update_data = user.model_dump(exclude_unset=True)
-
-#     # Hash password if it's being updated
-#     if "password" in update_data:
-#         update_data["hashed_password"] = hash_password(update_data.pop("password"))
-
-#     for key, value in update_data.items():
-#         setattr(db_user, key, value)
-
-#     db.commit()
-#     db.refresh(db_user)
-
-#     return StandardResponse(
-#         success=True,
-#         data=UserRetrieve.model_validate(db_user),
-#         message="User updated successfully.",
-#     )
-
-
-# @router.delete("/{user_id}", response_model=StandardResponse)
-# def delete_user(user_id: int, db: Session = Depends(get_db)):
-#     """Delete a user"""
-#     db_user = db.query(User).filter(User.id == user_id).first()
-#     if not db_user:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="User not found.",
-#         )
-
-#     db.delete(db_user)
-#     db.commit()
-
-#     return StandardResponse(
-#         success=True,
-#         data=None,
-#         message="User deleted successfully.",
-#     )
-
-
-# @router.post("/login", response_model=StandardResponse)
-# def login(user: UserLogin, db: Session = Depends(get_db)):
-#     """Login user"""
-#     db_user = db.query(User).filter(User.username == user.username).first()
-
-#     if not db_user or not verify_password(user.password, db_user.hashed_password):
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail="Invalid username or password.",
-#         )
-
-#     return StandardResponse(
-#         success=True,
-#         data={
-#             "id": db_user.id,
-#             "username": db_user.username,
-#             "email": db_user.email,
-#         },
-#         message="Login successful.",
-#     )

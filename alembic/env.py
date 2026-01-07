@@ -7,6 +7,7 @@ from alembic import context
 from apps.authentication.models import User
 from apps.blog.models import Post
 from apps.database import Base
+from apps.stock.models import Stock, StockHistory
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
