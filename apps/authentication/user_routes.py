@@ -101,14 +101,6 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         .first()
     )
     if existing_user:
-        # raise HTTPException(
-        #     status_code=status.HTTP_400_BAD_REQUEST,
-        #     detail="Username or email already registered.",
-        # )
-        # return StandardResponse.error_response(
-        #     message="Username or email already registered.",
-        #     status_code=status.HTTP_400_BAD_REQUEST,
-        # )
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content=StandardResponse.error_response(
@@ -145,8 +137,6 @@ def get_users(
     db: Session = Depends(get_db),
 ):
     """Get all users with pagination"""
-    # users = db.query(User).all()
-    # data = [UserList.model_validate(user) for user in users]
     result = paginate(
         query=db.query(User),
         page=page,  # we are passing page and page_size in paginate() directly
@@ -161,13 +151,6 @@ def get_users(
             meta=result.meta,
         ).model_dump(),
     )
-    # return JSONResponse(
-    #     status_code=status.HTTP_200_OK,
-    #     content=StandardResponse.success_response(
-    #         data=data,
-    #         message="Users fetched successfully.",
-    #     ).model_dump(),
-    # )
 
 
 @router.get("/retrieve/{user_id}", response_model=StandardResponse)

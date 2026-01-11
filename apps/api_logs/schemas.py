@@ -1,3 +1,5 @@
+import datetime
+
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 
@@ -21,13 +23,14 @@ class APILogList(BaseModel):
     method: str
     ip: str | None = None
     user_agent: str | None = None
-    body: dict | None = {}
+    # body: dict | None = {}
     header: dict | None = None
-    response: dict | None = None
+    # response: dict | list | str | None = None
     system_details: dict | None = {}
     extra_field: dict | None = None
     user_id: int | None = None
     status_code: str | None = None
+    created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -40,7 +43,9 @@ class APILogRetrieve(BaseModel):
     user_agent: str | None = None
     body: dict | None = {}
     header: dict | None = None
-    response: dict | None = None
+    # response: dict | None = None
+    response: dict | list | str | None = None
+
     system_details: dict | None = {}
     extra_field: dict | None = None
     user_id: int | None = None
@@ -70,12 +75,14 @@ class ErrorLogList(BaseModel):
     ip: str | None = None
     user_agent: str | None = None
     body: dict | None = {}
-    header: dict | None = None
-    response: dict | None = None
+    # header: dict | None = None
+    # response: dict | list | str | None = None
+
     system_details: dict | None = {}
     extra_field: dict | None = None
     user_id: int | None = None
     status_code: str | None = None
+    created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -88,10 +95,12 @@ class ErrorLogRetrieve(BaseModel):
     user_agent: str | None = None
     body: dict | None = {}
     header: dict | None = None
-    response: dict | None = None
+    # response: dict | None = None
+    response: dict | list | str | None = None
     system_details: dict | None = {}
     extra_field: dict | None = None
     user_id: int | None = None
     status_code: str | None = None
+    created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
