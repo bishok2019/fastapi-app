@@ -57,94 +57,22 @@ from apps.database import SessionLocal, get_db
 #         return
 
 
-# class APILoggingMiddleware(BaseHTTPMiddleware):
-#     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-#         response_body = b""  # initialize early
-#         response_status = 500
-#         response_headers = {}
-#         response_media_type = "application/json"
-
-#         # Skip GET requests
-#         if request.method.upper() == "GET":
-#             return await call_next(request)
-
-#         try:
-#             # Read request body
-#             try:
-#                 body = await request.json()
-#             except Exception:
-#                 body = None
-
-#             # Process response
-#             response = await call_next(request)
-
-#             # Read response body
-#             response_body = b""
-#             async for chunk in response.body_iterator:
-#                 response_body += chunk
-
-#             try:
-#                 response_content = json.loads(response_body.decode())
-#             except Exception:
-#                 response_content = response_body.decode()
-
-#             # Save response metadata
-#             response_status = response.status_code
-#             response_headers = dict(response.headers)
-#             response_media_type = response.media_type
-
-#             # Log API call
-#             db: Session = next(get_db())
-#             api_log = APILog(
-#                 url=str(request.url),
-#                 method=request.method,
-#                 ip=request.client.host if request.client else None,
-#                 user_agent=request.headers.get("user-agent"),
-#                 body=body,
-#                 header=dict(request.headers),
-#                 response=response_content,
-#                 status_code=str(response_status),
-#             )
-#             db.add(api_log)
-#             db.commit()
-
-#         except Exception as exc:
-#             # Log errors
-#             db: Session = next(get_db())
-#             error_log = ErrorLog(
-#                 url=str(request.url),
-#                 method=request.method.lower(),
-#                 body=body if "body" in locals() else None,
-#                 header=dict(request.headers),
-#                 response="".join(
-#                     traceback.format_exception(type(exc), exc, exc.__traceback__)
-#                 ),
-#             )
-#             db.add(error_log)
-#             db.commit()
-
-#         # Return response safely
-#         return Response(
-#             content=response_body,
-#             status_code=response_status,
-#             headers=response_headers,
-#             media_type=response_media_type,
-#         )
-
-
 class APILoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response_body = b""
         response_status = 500
         response_headers = {}
         response_media_type = "application/json"
+        body = None
 
         try:
-            # Read request body
-            try:
-                body = await request.json()
-            except Exception:
-                body = None
+            # Skip GET requests
+            if request.method.upper() != "GET":
+                # Read request body
+                try:
+                    body = await request.json()
+                except Exception:
+                    body = None
 
             # Get response
             response = await call_next(request)
@@ -166,19 +94,20 @@ class APILoggingMiddleware(BaseHTTPMiddleware):
             response_media_type = response.media_type
 
             # Log API call
-            db: Session = next(get_db())
-            api_log = APILog(
-                url=str(request.url),
-                method=request.method,
-                ip=request.client.host if request.client else None,
-                user_agent=request.headers.get("user-agent"),
-                body=body,
-                header=dict(request.headers),
-                response=response_content,
-                status_code=str(response_status),
-            )
-            db.add(api_log)
-            db.commit()
+            if request.method.upper() != "GET":
+                db: Session = next(get_db())
+                api_log = APILog(
+                    url=str(request.url),
+                    method=request.method,
+                    ip=request.client.host if request.client else None,
+                    user_agent=request.headers.get("user-agent"),
+                    body=body,
+                    header=dict(request.headers),
+                    response=response_content,
+                    status_code=str(response_status),
+                )
+                db.add(api_log)
+                db.commit()
 
         except Exception as exc:
             # Log errors
@@ -194,6 +123,11 @@ class APILoggingMiddleware(BaseHTTPMiddleware):
             )
             db.add(error_log)
             db.commit()
+            # Override response with error
+            # response_body = json.dumps({"detail": str(exc)}).encode()
+            # response_status = 500
+            # response_headers = {"content-type": "application/json"}
+            # response_media_type = "application/json"
 
         # Return the original response content safely
         return Response(
