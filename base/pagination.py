@@ -1,3 +1,4 @@
+from datetime import datetime
 from math import ceil
 from typing import Dict, Generic, List, Optional, Type, TypeVar
 
@@ -15,6 +16,7 @@ class PaginationMeta(BaseModel):
     total_pages: int
     previous_page: Optional[int]
     next_page: Optional[int]
+    timestamp: str
 
 
 class CustomPagination(BaseModel, Generic[SchemaType]):
@@ -51,5 +53,6 @@ def paginate(
         total_pages=total_pages,
         previous_page=page - 1 if page > 1 else None,
         next_page=page + 1 if page < total_pages else None,
+        timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     )
     return CustomPagination(data=serialized_data, meta=meta.model_dump())
