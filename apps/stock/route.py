@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from apps.database import get_db
+from apps.notification.service import create_notification_for_all_users
 from base.pagination import paginate
 from base.route import StandardResponse
 
@@ -60,6 +61,11 @@ def create_stock(
         )
         db.add(historical_price)
 
+        # create notification
+        create_notification_for_all_users(
+            db=db,
+            message=f"New stock created: {db_stock.symbol} - {db_stock.company_name} at price {db_stock.price}",
+        )
         db.commit()
         db.refresh(db_stock)
 

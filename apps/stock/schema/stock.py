@@ -9,6 +9,7 @@ from .history import StockHistoryListSchema
 class StockListSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: int  # also include id list view
     symbol: str
     company_name: str
     price: int

@@ -17,6 +17,7 @@ class Notification(BaseModel):
     __tablename__ = "notifications"
 
     # user_id = Column(Integer, index=True, nullable=False)
+    title = Column(String(100), nullable=False)
     message = Column(String(255), nullable=False)
     notification_type = Column(
         Enum(NotificationTypeChoices, name="notification_type_enum"),

@@ -14,3 +14,6 @@ class User(BaseModel):
     is_superuser = Column(Boolean, default=False)
 
     posts = relationship("Post", back_populates="author")
+    user_notifications = relationship(
+        "UserNotification", back_populates="user"
+    )  # reverse relationship to UserNotification
