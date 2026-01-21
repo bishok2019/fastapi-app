@@ -35,7 +35,7 @@ class Notification(BaseModel):
 class UserNotification(BaseModel):
     __tablename__ = "user_notifications"
 
-    user_id = Column(Integer, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
     notification_id = Column(
         Integer, ForeignKey("notifications.id"), index=True, nullable=False
     )

@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from apps.database import get_db
+from apps.notification.schemas import NotificationCreateSchema
 from apps.notification.service import create_notification_for_all_users
 from base.pagination import paginate
 from base.route import StandardResponse
@@ -62,10 +63,25 @@ def create_stock(
         db.add(historical_price)
 
         # create notification
-        create_notification_for_all_users(
-            db=db,
-            message=f"New stock created: {db_stock.symbol} - {db_stock.company_name} at price {db_stock.price}",
-        )
+        try:
+            create_notification_for_all_users(
+                db=db,
+                notification=NotificationCreateSchema(
+                    title=f"New Stock Added-{db_stock.symbol}",
+                    message=f"New stock created: {db_stock.symbol} - {db_stock.company_name} at price {db_stock.price}",
+                ),
+            )
+        except Exception as notiff_error:
+            # Log the exception in real application
+            print(
+                f"Error from notiff_error->Failed to create notification: {str(notiff_error)}",
+            )
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content=StandardResponse.error_response(
+                    message=f"Failed to create notification->{str(notiff_error)}"
+                ).model_dump(),
+            )
         db.commit()
         db.refresh(db_stock)
 
@@ -86,11 +102,16 @@ def create_stock(
             ).model_dump(),
         )
 
-    except Exception as e:
+    except Exception as stock_error:
         db.rollback()
-        raise HTTPException(
+        print(
+            f"Error from stock_error->Failed to create stock: {str(stock_error)}",
+        )
+        return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to create stock: {str(e)}",
+            content=StandardResponse.error_response(
+                message=f"Failed to create stock: {str(stock_error)}"
+            ).model_dump(),
         )
 
 

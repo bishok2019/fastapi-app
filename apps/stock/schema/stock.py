@@ -22,7 +22,7 @@ class StockCreateSchema(BaseModel):
     symbol: str
     company_name: str
     price: int
-    last_updated: Optional[datetime] = None
+    # last_updated: Optional[datetime] = None
 
 
 class StockUpdateSchema(BaseModel):

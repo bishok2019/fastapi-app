@@ -9,6 +9,7 @@ from .models import NotificationTypeChoices
 class NotificationCreateSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    # title: str
     message: str
     notification_type: NotificationTypeChoices = NotificationTypeChoices.SYSTEM
 
