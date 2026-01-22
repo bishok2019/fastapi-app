@@ -7,7 +7,11 @@ from apps.database import Base
 class BaseModel(Base):
     __abstract__ = True
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        # index=True, # since primary key is already indexed
+    )
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
