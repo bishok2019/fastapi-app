@@ -1,4 +1,5 @@
 import json
+import logging
 import traceback
 from typing import Callable
 
@@ -7,8 +8,9 @@ from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from apps.api_logs.models import APILog, ErrorLog
-from apps.database import get_db
+from apps.database import SessionLocal
 
+logger = logging.getLogger(__name__)
 # class APILoggingMiddleware(BaseHTTPMiddleware):
 #     async def dispatch(self, request: Request, call_next: Callable) -> Response:
 #         # Print request
@@ -29,9 +31,7 @@ from apps.database import get_db
 #         print("Request json body:", await request.json())
 #         print("Request body:", await request.body())
 #         print("user agent:", request.headers.get("user-agent"))
-
 #         print("=" * 25 + "Response Log Start" + "=" * 25)
-
 #         # Process and return response
 #         response = await call_next(request)
 #         print(f"Response: {response}")
@@ -40,7 +40,6 @@ from apps.database import get_db
 #         print(f"Response media type: {response.media_type}")
 #         print(f"Response background: {response.background}")
 #         print(f"Response type: {type(response)}")
-
 #         response_body = b""
 #         async for chunk in response.body_iterator:
 #             response_body += chunk
@@ -52,183 +51,81 @@ from apps.database import get_db
 #             headers=dict(response.headers),
 #             media_type=response.media_type,
 #         )
-
-
 #         return
-
-
-# class APILoggingMiddleware(BaseHTTPMiddleware):
-#     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-#         response_body = b""
-#         response_status = 500
-#         response_headers = {}
-#         response_media_type = "application/json"
-#         body = None
-
-#         try:
-#             # Skip GET requests
-#             if request.method.upper() != "GET":
-#                 # Read request body
-#                 try:
-#                     body = await request.json()
-#                 except Exception:
-#                     body = None
-
-#             # Get response
-#             response = await call_next(request)
-
-#             # Read response body safely
-#             response_body = b""
-#             async for chunk in response.body_iterator:
-#                 response_body += chunk
-
-#             # Convert response to string for logging
-#             try:
-#                 response_content = json.dumps(json.loads(response_body.decode()))
-#             except Exception:
-#                 response_content = response_body.decode()
-
-#             # Save metadata
-#             response_status = response.status_code
-#             response_headers = dict(response.headers)
-#             response_media_type = response.media_type
-
-#             # Log API call
-#             if request.method.upper() != "GET":
-#                 db: Session = next(get_db())
-#                 api_log = APILog(
-#                     url=str(request.url),
-#                     method=request.method,
-#                     ip=request.client.host if request.client else None,
-#                     user_agent=request.headers.get("user-agent"),
-#                     body=body,
-#                     header=dict(request.headers),
-#                     response=response_content,
-#                     status_code=str(response_status),
-#                 )
-#                 db.add(api_log)
-#                 db.commit()
-
-#         except Exception as exc:
-#             # Log errors
-#             db: Session = next(get_db())
-#             error_log = ErrorLog(
-#                 url=str(request.url),
-#                 method=request.method.lower(),
-#                 body=body if "body" in locals() else None,
-#                 header=dict(request.headers),
-#                 response="".join(
-#                     traceback.format_exception(type(exc), exc, exc.__traceback__)
-#                 ),
-#             )
-#             db.add(error_log)
-#             db.commit()
-#             # Override response with error
-#             # response_body = json.dumps({"detail": str(exc)}).encode()
-#             # response_status = 500
-#             # response_headers = {"content-type": "application/json"}
-#             # response_media_type = "application/json"
-
-#         # Return the original response content safely
-#         return Response(
-#             content=response_body,
-#             status_code=response_status,
-#             headers=response_headers,
-#             media_type=response_media_type,
-#         )
 
 
 class APILoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response_body = b""
         response_status = 500
-        # response_headers = {}
-        # response_media_type = "application/json"
+        response_headers = {}
+        response_media_type = "application/json"
         body = None
-
+        db: Session = SessionLocal()  # Create a new database session directly.
+        # We are not using `next(get_db())` here because `get_db()` is a generator
+        # designed for FastAPI dependencies (`Depends`). Middleware does not handle
+        # generators automatically, so we manually manage the session lifecycle.
         try:
             # Skip GET requests
             if request.method.upper() != "GET":
                 # Read request body
                 try:
-                    body_bytes = await request.body()
-                    body = json.loads(body_bytes) if body_bytes else None
+                    body = await request.json()
                 except Exception:
                     body = None
-
             # Get response
             response = await call_next(request)
-
             # Read response body safely
-
-            # async for chunk in response.body_iterator: # CONSUMING RESPONSE BODY, BREAKS WHILE RETURNING, THEN WE HAVE TO RECREATE RESPONSE
-            #     response_body += chunk
-
-            response_body = getattr(
-                response, "body", b""
-            )  # DONT CONSUME RESPONSE BODY SO WE DONT NEED TO RECREATE RESPONSE
-
+            async for chunk in response.body_iterator:
+                response_body += chunk
             # Convert response to string for logging
             try:
                 response_content = json.dumps(json.loads(response_body.decode()))
             except Exception:
                 response_content = response_body.decode()
-
             # Save metadata
             response_status = response.status_code
-            # response_headers = dict(response.headers)
-            # response_media_type = response.media_type
-
+            response_headers = dict(response.headers)
+            response_media_type = response.media_type
             # Log API call
             if request.method.upper() != "GET":
-                db: Session = next(get_db())
-                try:
-                    api_log = APILog(
-                        url=str(request.url),
-                        method=request.method.upper(),
-                        ip=request.client.host if request.client else None,
-                        user_agent=request.headers.get("user-agent"),
-                        body=body,
-                        header=dict(request.headers),
-                        response=response_content,
-                        status_code=str(response_status),
-                    )
-                    db.add(api_log)
-                    db.commit()
-                finally:
-                    db.close()
-
-        except Exception as exc:
-            # Log errors
-            db: Session = next(get_db())
-            try:
-                error_log = ErrorLog(
+                api_log = APILog(
                     url=str(request.url),
-                    method=request.method.upper(),
+                    method=request.method,
+                    ip=request.client.host if request.client else None,
+                    user_agent=request.headers.get("user-agent"),
                     body=body,
                     header=dict(request.headers),
-                    response="".join(
-                        traceback.format_exception(type(exc), exc, exc.__traceback__)
-                    ),
+                    response=response_content,
+                    status_code=str(response_status),
                 )
-                db.add(error_log)
+                db.add(api_log)
                 db.commit()
-            finally:
-                db.close()
-            raise
+        except Exception as exc:
+            # Log errors
+            error_log = ErrorLog(
+                url=str(request.url),
+                method=request.method.lower(),
+                body=body if "body" in locals() else None,
+                header=dict(request.headers),
+                response="".join(
+                    traceback.format_exception(type(exc), exc, exc.__traceback__)
+                ),
+            )
+            db.add(error_log)
+            db.commit()
+            # Override response with error
+            response_body = json.dumps({"detail": str(exc)}).encode()
+            response_status = 500
+            response_headers = {"content-type": "application/json"}
+            response_media_type = "application/json"
+        finally:
+            db.close()  # Ensure DB session is closed
 
-        # Return the original response content safely # WE DONT NEED TO RECREATE RESPONSE AS WE DIDNT CONSUME THE RESPONSE BODY
-        # return Response(
-        #     content=response_body,
-        #     status_code=response_status,
-        #     headers=response_headers,
-        #     media_type=response_media_type,
-        # )
-        print("RETURNING ORIGINAL RESPONSE")
-        print(response)
-        print("response type:")
-        print(type(response))
-        print("dir(response):")
-        print(dir(response))
-
-        return response  # RETURN ORIGINAL RESPONSE
+        # Return the original response content safely
+        return Response(
+            content=response_body,
+            status_code=response_status,
+            headers=response_headers,
+            media_type=response_media_type,
+        )

@@ -10,8 +10,8 @@ from base.route import (
     UpdateRouter,
 )
 
-from .models.models import User
-from .schemas import UserCreate, UserList, UserLogin, UserRetrieve, UserUpdate
+from .models import User
+from .schemas import UserCreate, UserList, UserLogin, UserRetrieve
 from .utils import hash_password, verify_password
 
 router = APIRouter()

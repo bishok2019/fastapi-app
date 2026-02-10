@@ -9,7 +9,7 @@ from apps.authentication.authentication import (
     get_current_user,
     verify_token,
 )
-from apps.authentication.models.models import User
+from apps.authentication.models import User
 from apps.authentication.schemas import UserCreate, UserLogin, UserRetrieve
 from apps.authentication.utils import hash_password, verify_password
 from apps.blog.schemas import PostList

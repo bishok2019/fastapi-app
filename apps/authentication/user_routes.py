@@ -82,7 +82,7 @@ from apps.database import get_db
 from base.pagination import paginate
 from base.route import StandardResponse
 
-from .models.models import User
+from .models import User
 from .schemas import UserCreate, UserList, UserLogin, UserRetrieve, UserUpdate
 from .utils import hash_password, verify_password
 
