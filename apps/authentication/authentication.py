@@ -49,7 +49,7 @@ def verify_token(token: str) -> int:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
-        token_type: str = payload.get("type")
+        # token_type: str = payload.get("type")
 
         if user_id is None:
             raise HTTPException(

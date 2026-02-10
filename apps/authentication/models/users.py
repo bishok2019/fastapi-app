@@ -1,7 +1,6 @@
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column, String
 from sqlalchemy.orm import relationship
 
-from apps.blog.models.post import Post
 from base.models import BaseModel
 
 
@@ -17,3 +16,9 @@ class User(BaseModel):
     user_notifications = relationship(
         "UserNotification", back_populates="user"
     )  # reverse relationship to UserNotification
+    user_roles = relationship(
+        "UserRole", back_populates="user"
+    )  # reverse relationship to UserRole
+    user_permissions = relationship(
+        "UserPermission", back_populates="user"
+    )  # reverse relationship to UserPermission
