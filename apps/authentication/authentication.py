@@ -88,3 +88,12 @@ def get_current_active_user(current_user: User = Depends(get_current_user)) -> U
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+
+def check_permissions(
+    required_permissions: list[str],
+    current_user: User = Depends(get_current_active_user),
+) -> bool:
+    """Check if current user has required permissions"""
+    user_permissions = {perm.code_name for perm in current_user.user_permissions}
+    return all(perm in user_permissions for perm in required_permissions)
