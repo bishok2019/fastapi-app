@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.17.2",
+    "colorama>=0.4.6",
     "fastapi[standard]>=0.124.2",
     "passlib[argon2]>=1.7.4",
     "psycopg2-binary>=2.9.11",

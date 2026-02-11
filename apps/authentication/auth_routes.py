@@ -136,6 +136,8 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
                     "username": user.username,
                     "email": user.email,
                 },
+                "roles": [role.name for role in user.user_roles],
+                "permissions": [perm.code_name for perm in user.user_permissions],
             },
             message="Login successful",
         ).model_dump(),
