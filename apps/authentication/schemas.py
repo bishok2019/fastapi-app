@@ -33,3 +33,9 @@ class UserUpdate(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+
+class RoleList(BaseModel):
+    name: str
+    description: str | None = None
+    is_active: bool

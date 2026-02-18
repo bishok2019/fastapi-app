@@ -90,10 +90,34 @@ def get_current_active_user(current_user: User = Depends(get_current_user)) -> U
     return current_user
 
 
+# def check_permissions(
+#     required_permissions: list[str],
+#     current_user: User = Depends(get_current_active_user),
+# ) -> bool:
+#     """Check if current user has required permissions"""
+#     user_permissions = {perm.code_name for perm in current_user.user_permissions}
+#     return all(perm in user_permissions for perm in required_permissions)
+
+
 def check_permissions(
     required_permissions: list[str],
-    current_user: User = Depends(get_current_active_user),
-) -> bool:
-    """Check if current user has required permissions"""
-    user_permissions = {perm.code_name for perm in current_user.user_permissions}
-    return all(perm in user_permissions for perm in required_permissions)
+):  # this method expects a list of permission code names like ["can_view_stock", "can_edit_stock"]
+    def permission_dependency(
+        current_user: User = Depends(get_current_active_user),
+    ):
+        user_permissions = {perm.code_name for perm in current_user.user_permissions}
+        message = (
+            required_permissions[0][4:].replace("_", " ").title()
+            if required_permissions
+            else ""
+        )
+
+        if not all(p in user_permissions for p in required_permissions):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You do not have permission to {message}.",
+            )
+
+        return current_user
+
+    return permission_dependency

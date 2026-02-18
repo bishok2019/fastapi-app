@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
+from apps.authentication.models import User
+from apps.authentication.permissions.utils import check_permissions
 from apps.database import get_db
 from apps.notification.schemas import NotificationCreateSchema
 from apps.notification.service import create_notification_for_all_users
@@ -142,6 +144,7 @@ def create_stock(
 def retrieve_stock(
     stock_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(check_permissions(["can_view_stock"])),
 ):
     """Retrieve a stock by ID"""
     db_stock = (

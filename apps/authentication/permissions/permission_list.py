@@ -26,4 +26,10 @@ ALL_PERMISSION_LIST = {
             "view",
         ],
     },
+    "stock_app": {
+        "stock": [
+            "create",
+            "view",
+        ]
+    },
 }
