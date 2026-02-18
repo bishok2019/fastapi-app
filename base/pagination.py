@@ -3,6 +3,7 @@ from datetime import datetime
 from math import ceil
 from typing import Dict, Generic, List, Optional, Type, TypeVar
 
+from fastapi import HTTPException
 from fastapi.params import Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -57,15 +58,20 @@ def paginate(
     page_size = pagination.page_size
 
     if page < 1:
-        raise ValueError("page must be >= 1")
+        raise [HTTPException(status_code=400, detail="page must be >= 1")]
+        # raise ValueError("page must be >= 1")
     if page_size < 1 or page_size > 100:
-        raise ValueError("page_size must be between 1 and 100")
+        raise [
+            HTTPException(status_code=400, detail="page_size must be between 1 and 100")
+        ]
+        # raise ValueError("page_size must be between 1 and 100")
 
     total = query.count()
     total_pages = ceil(total / page_size) if total else 1
 
     if page > total_pages:
-        raise ValueError("Page not found")
+        raise HTTPException(status_code=404, detail="Page not found")
+        # raise ValueError("Page not found")
 
     items = query.offset((page - 1) * page_size).limit(page_size).all()
 

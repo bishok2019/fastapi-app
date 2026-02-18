@@ -92,7 +92,7 @@ def list_error_logs(
         content=StandardResponse.success_response(
             data=result.data,
             message="Error logs fetched successfully.",
-            # meta=result.meta,
+            meta=result.meta,  # to show pagination meta in response
         ).model_dump(mode="json"),
     )
 
