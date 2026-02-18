@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from apps.database import get_db
-from base.pagination import paginate
+from base.pagination import get_pagination_params, paginate
 from base.route import StandardResponse
 
 from .models import APILog, ErrorLog
@@ -14,16 +14,19 @@ router = APIRouter()
 
 @router.get("/list", response_model=StandardResponse)
 def list_api_logs(
-    page: int = 1,
-    page_size: int = 10,
+    # page: int = 1,
+    # page_size: int = 10,
     db: Session = Depends(get_db),
+    pagination=Depends(get_pagination_params),
 ):
     """List all API logs"""
     result = paginate(
         query=db.query(APILog).order_by(APILog.created_at.desc()),
-        page=page,
-        page_size=page_size,
+        # page=page,
+        # page_size=page_size,
         schema=APILogList,
+        pagination=pagination,
+        # pagination=Depends(get_pagination_params),
     )
 
     return JSONResponse(
@@ -63,15 +66,17 @@ def retrieve_api_logs(
 
 @router.get("/error-logs", response_model=StandardResponse)
 def list_error_logs(
-    page: int = 1,
-    page_size: int = 10,
+    # page: int = 1,
+    # page_size: int = 10,
     db: Session = Depends(get_db),
+    pagination=Depends(get_pagination_params),
 ):
     """List all error logs"""
     result = paginate(
         query=db.query(ErrorLog).order_by(ErrorLog.created_at.desc()),
-        page=page,
-        page_size=page_size,
+        # page=page,
+        # page_size=page_size,
+        pagination=pagination,
         schema=ErrorLogList,
     )
     if not result.data:

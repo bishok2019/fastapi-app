@@ -1,12 +1,32 @@
+import logging
 from datetime import datetime
 from math import ceil
 from typing import Dict, Generic, List, Optional, Type, TypeVar
 
+from fastapi.params import Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+# logging.basicConfig(
+# level=logging.INFO,  # Show INFO and above
+# format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+# )
+# logger = logging.getLogger(__name__)
+
 ModelType = TypeVar("ModelType")
 SchemaType = TypeVar("SchemaType")
+
+
+class PaginationParams(BaseModel):
+    page: int
+    page_size: int
+
+
+def get_pagination_params(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+) -> PaginationParams:
+    return PaginationParams(page=page, page_size=page_size)
 
 
 class PaginationMeta(BaseModel):
@@ -27,10 +47,15 @@ class CustomPagination(BaseModel, Generic[SchemaType]):
 def paginate(
     *,
     query,
-    page: int = 1,  # assign default page value so we dont have to pass it every time
-    page_size: int = 10,
+    # page: int = 1,  # assign default page value so we dont have to pass it every time
+    # page_size: int = 10,
+    pagination: PaginationParams,
     schema: Type[SchemaType],
 ) -> CustomPagination[SchemaType]:
+
+    page = pagination.page
+    page_size = pagination.page_size
+
     if page < 1:
         raise ValueError("page must be >= 1")
     if page_size < 1 or page_size > 100:
@@ -45,6 +70,11 @@ def paginate(
     items = query.offset((page - 1) * page_size).limit(page_size).all()
 
     serialized_data = [schema.model_validate(item).model_dump() for item in items]
+
+    # logger.info(f"Query: {query}")
+    # has_count = hasattr(query, "count")
+    # logger.info(f"Has count: {has_count}")
+    # logger.info(f"Items: {len(items)}")
 
     meta = PaginationMeta(
         total=total,

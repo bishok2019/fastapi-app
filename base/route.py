@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from apps.database import get_db
 
-from .pagination import paginate
+from .pagination import get_pagination_params, paginate
 
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType")
@@ -103,14 +103,19 @@ class ReadRouter(Generic[ModelType, ReadSchemaType]):
         self.router.get("", response_model=StandardResponse)(self.read_all)
 
     def read_all(
-        self, page: int = 1, page_size: int = 10, db: Session = Depends(get_db)
+        self,
+        # page: int = 1,
+        # page_size: int = 10,
+        db: Session = Depends(get_db),
+        pagination=Depends(get_pagination_params),
     ):
         try:
             result = paginate(
                 query=db.query(self.model),
-                page=page,
-                page_size=page_size,
+                # page=page,
+                # page_size=page_size,
                 schema=self.schema,
+                pagination=pagination,
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc))

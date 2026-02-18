@@ -8,7 +8,7 @@ from apps.authentication.permissions.utils import check_permissions
 from apps.database import get_db
 from apps.notification.schemas import NotificationCreateSchema
 from apps.notification.service import create_notification_for_all_users
-from base.pagination import paginate
+from base.pagination import get_pagination_params, paginate
 from base.route import StandardResponse
 
 from .models import Stock, StockHistory
@@ -25,15 +25,17 @@ router = APIRouter()
 
 @router.get("/list", response_model=StandardResponse)
 def list_stocks(
-    page: int = 1,  # we are passing page and page_size in paginate() directly
-    page_size: int = 1,
+    # page: int = 1,  # we are passing page and page_size in paginate() directly
+    # page_size: int = 1,
     db: Session = Depends(get_db),
+    pagination=Depends(get_pagination_params),
 ):
     """List all stocks"""
     result = paginate(
         query=db.query(Stock),
-        page=page,  # we are passing page and page_size in paginate() directly
-        page_size=page_size,
+        # page=page,  # we are passing page and page_size in paginate() directly
+        # page_size=page_size,
+        pagination=pagination,
         schema=StockListSchema,
     )
 
